@@ -24,13 +24,17 @@ In this version, the camera streams need to be already undistorted and rectified
 
 ## Compiling
 
-Clone the repository:
+Clone the repository in your workspace:
 
 ```bash
-$ git clone https://github.com/umass-amrl/stereo_dense_reconstruction
+$ git clone https://github.com/TheFrey222/stereo_dense_reconstruction
 ```
 
-This repository was compiled in Noetic with catkin_make.
+Build package:
+
+```bash
+$ catkin_make
+```
 
 ## Running Dense 3D Reconstruction
 
