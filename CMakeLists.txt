@@ -1,43 +1,61 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(stereo_dense_reconstruction)
 
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+set(CMAKE_BUILD_TYPE Debug)
 
-rosbuild_init()
-
-IF(NOT ROS_BUILD_TYPE)
-  SET(ROS_BUILD_TYPE Release)
-ENDIF()
-
-MESSAGE("Build type: " ${ROS_BUILD_TYPE})
-
-rosbuild_find_ros_package(dynamic_reconfigure)
-include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
-gencfg()
+set(CMAKE_CXX_FLAGS "-march=native \
+-Wno-deprecated-declarations \
+-Wno-deprecated \
+-Wno-ignored-qualifiers \
+-Wno-reorder \
+-Wno-missing-braces \
+-msse3 \
+-pthread ")
 
 find_package(OpenCV REQUIRED)
+find_package(yaml-cpp REQUIRED)
+
+find_package(catkin REQUIRED COMPONENTS
+message_generation
+sensor_msgs
+geometry_msgs
+roscpp
+rospy
+std_msgs
+cv_bridge
+image_transport
+dynamic_reconfigure
+)
+
+catkin_package()
+
+include_directories(
+  ${PROJECT_SOURCE_DIR}
+  ${catkin_INCLUDE_DIRS}
+  ${YAML_CPP_INCLUDE_DIRS}
+)
+
+find_package(Boost COMPONENTS system thread filesystem program_options REQUIRED)
 set(INC_DIR ./include)
 set(LIBELAS_SRC_DIR src/elas)
-set(CMAKE_CXX_FLAGS "-msse3")
-set(Boost_USE_STATIC_LIBS OFF) 
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF) 
-find_package(Boost 1.54.0 COMPONENTS system filesystem program_options REQUIRED)
-
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
-FILE(GLOB LIBELAS_SRC_FILES "src/elas/*.cpp")
-
 include_directories(
-  ${OpenCV_INCLUDE_DIRS}
   ${LIBELAS_SRC_DIR}
-  ${Boost_INCLUDE_DIRS}
   ${INC_DIR}
+    
 )
 
-rosbuild_add_executable(dense_reconstruction
+add_executable(dense_reconstruction
   src/dense_reconstruction.cpp
-  ${LIBELAS_SRC_FILES}
-)
-target_link_libraries(dense_reconstruction ${OpenCV_LIBS} "-lpopt")
+  src/elas/descriptor.cpp
+  src/elas/elas.cpp
+  src/elas/filter.cpp
+  src/elas/matrix.cpp
+  src/elas/triangle.cpp)
+
+target_link_libraries(dense_reconstruction 
+    ${catkin_LIBRARIES}
+    ${YAML_CPP_LIBRARIES}
+    ${OpenCV_LIBS} "-lpopt")
